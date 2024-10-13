@@ -1,6 +1,7 @@
-function domReady(
-  condition: DocumentReadyState[] = ["complete", "interactive"]
-) {
+import { contextBridge, ipcRenderer } from "electron";
+import { XossApi } from "../../index";
+
+function domReady(condition: DocumentReadyState[] = ["complete", "interactive"]) {
   return new Promise((resolve) => {
     if (condition.includes(document.readyState)) {
       resolve(true);
@@ -91,4 +92,18 @@ window.onmessage = (ev) => {
   ev.data.payload === "removeLoading" && removeLoading();
 };
 
-setTimeout(removeLoading, 4999);
+setTimeout(removeLoading, 1000);
+
+const api: XossApi = {
+  selectFitFile: () => {
+    return ipcRenderer.invoke("select-fit-file");
+  },
+  convertFitToJson: (fitPath: string) => {
+    return ipcRenderer.send("convert-fit-to-json", fitPath);
+  },
+  getWorkouts: async (workoutId: string | null): Promise<string> => {
+    return ipcRenderer.invoke("get-workouts", workoutId);
+  }
+};
+
+contextBridge.exposeInMainWorld("xossApi", api);

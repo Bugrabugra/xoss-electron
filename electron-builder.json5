@@ -11,6 +11,7 @@
     "dist-electron",
     "dist"
   ],
+  "productName": "XOSS Archiver",
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
     "target": [

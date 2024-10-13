@@ -1,6 +1,8 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron";
+import { app, BrowserWindow, shell, ipcMain, dialog } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
+import { getWorkoutsHandler } from "../mongo";
+import { connectDb, fitToJsonConverter } from "../utils";
 
 // The built directory structure
 //
@@ -14,9 +16,7 @@ import { join } from "node:path";
 //
 process.env.DIST_ELECTRON = join(__dirname, "../");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
-process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
-  ? join(process.env.DIST_ELECTRON, "../public")
-  : process.env.DIST;
+process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL ? join(process.env.DIST_ELECTRON, "../public") : process.env.DIST;
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith("6.1")) app.disableHardwareAcceleration();
@@ -43,6 +43,7 @@ const indexHtml = join(process.env.DIST, "index.html");
 async function createWindow() {
   win = new BrowserWindow({
     title: "Main window",
+    fullscreen: true,
     icon: join(process.env.PUBLIC, "favicon.ico"),
     webPreferences: {
       preload,
@@ -72,6 +73,29 @@ async function createWindow() {
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https:")) shell.openExternal(url);
     return { action: "deny" };
+  });
+
+  connectDb();
+
+  ipcMain.handle("select-fit-file", async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      properties: ["openFile"]
+    });
+    if (canceled) {
+      return;
+    } else {
+      return filePaths[0];
+    }
+  });
+
+  ipcMain.on("convert-fit-to-json", async (_, fitPath) => {
+    fitToJsonConverter(fitPath);
+  });
+
+  ipcMain.handle("get-workouts", async (_, id: string = null): Promise<string> => {
+    const result = await getWorkoutsHandler(id);
+
+    return JSON.stringify(result);
   });
 }
 

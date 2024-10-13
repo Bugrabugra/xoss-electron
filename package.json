@@ -21,27 +21,37 @@
     "prettier-format": "prettier --config .prettierrc 'src/**/*.{ts,tsx}' --write"
   },
   "devDependencies": {
-    "@playwright/test": "^1.43.0",
+    "@types/leaflet": "^1.9.12",
     "@types/react": "^18.2.75",
     "@types/react-dom": "^18.2.24",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
     "@typescript-eslint/parser": "^7.6.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "antd": "^5.21.1",
+    "dayjs": "^1.11.13",
     "electron": "^29.2.0",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "leaflet": "^1.9.4",
+    "leaflet-ant-path": "^1.3.0",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-leaflet": "^4.2.1",
     "sass": "^1.74.1",
     "typescript": "^5.4.4",
     "vite": "^5.2.8",
     "vite-electron-plugin": "^0.8.3",
-    "vite-plugin-electron-renderer": "^0.14.5"
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "zustand": "^5.0.0-rc.2"
   },
   "engines": {
     "node": "^14.18.0 || >=16.0.0"
+  },
+  "dependencies": {
+    "fit-decoder": "^1.0.5",
+    "mongoose": "^8.7.0"
   }
 }
