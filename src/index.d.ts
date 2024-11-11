@@ -1,8 +1,4 @@
-export interface XossApi {
-  selectFitFile: () => Promise<string>;
-  convertFitToJson: (fitPath: string) => Promise<void>;
-  getWorkouts: (workoutId?: string) => Promise<string>;
-}
+import { XossApi } from "../index";
 
 declare global {
   interface Window {

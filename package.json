@@ -1,5 +1,5 @@
 {
-  "name": "electron-vite-react",
+  "name": "xoss-archiver",
   "version": "2.1.0",
   "main": "dist-electron/main/index.js",
   "description": "Electron Vite React boilerplate.",
@@ -21,6 +21,7 @@
     "prettier-format": "prettier --config .prettierrc 'src/**/*.{ts,tsx}' --write"
   },
   "devDependencies": {
+    "@ant-design/icons": "^5.5.1",
     "@types/leaflet": "^1.9.12",
     "@types/react": "^18.2.75",
     "@types/react-dom": "^18.2.24",
@@ -29,11 +30,13 @@
     "@vitejs/plugin-react": "^4.2.1",
     "antd": "^5.21.1",
     "dayjs": "^1.11.13",
-    "electron": "^29.2.0",
+    "electron": "^33.0.1",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "highcharts": "^11.4.8",
+    "highcharts-react-official": "^3.2.1",
     "leaflet": "^1.9.4",
     "leaflet-ant-path": "^1.3.0",
     "prettier": "^3.2.5",
@@ -51,7 +54,8 @@
     "node": "^14.18.0 || >=16.0.0"
   },
   "dependencies": {
-    "fit-decoder": "^1.0.5",
+    "electron-store": "^8.2.0",
+    "fit-file-parser": "^1.20.0",
     "mongoose": "^8.7.0"
   }
 }

@@ -1,8 +1,10 @@
 import { model, Schema } from "mongoose";
-import { JSONFile } from "../../../index";
+import { ConvertedJSONFile } from "../../../index";
 
 const recordDataSchema = new Schema({
   timestamp: String,
+  elapsed_time: Number,
+  timer_time: Number,
   position_lat: Number,
   position_long: Number,
   distance: Number,
@@ -11,7 +13,7 @@ const recordDataSchema = new Schema({
   temperature: Number
 });
 
-const workoutSchema = new Schema<JSONFile>({
+const workoutSchema = new Schema<ConvertedJSONFile>({
   records: [recordDataSchema],
   details: {
     timestamp: String,
@@ -19,16 +21,10 @@ const workoutSchema = new Schema<JSONFile>({
     total_elapsed_time: Number,
     total_distance: Number,
     total_moving_time: Number,
-    enhanced_avg_speed: Number,
-    enhanced_max_speed: Number,
-    enhanced_avg_altitude: Number,
-    enhanced_min_altitude: Number,
-    enhanced_max_altitude: Number,
     avg_speed: Number,
     max_speed: Number,
     total_ascent: Number,
     total_descent: Number,
-    num_laps: Number,
     avg_altitude: Number,
     max_altitude: Number,
     min_altitude: Number,
@@ -37,6 +33,6 @@ const workoutSchema = new Schema<JSONFile>({
   }
 });
 
-const Workout = model<JSONFile>("Workout", workoutSchema);
+const Workout = model<ConvertedJSONFile>("Workout", workoutSchema);
 
 export default Workout;

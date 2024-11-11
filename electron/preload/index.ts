@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { XossApi } from "../../index";
+import { StoreSchema, XossApi } from "../../index";
 
 function domReady(condition: DocumentReadyState[] = ["complete", "interactive"]) {
   return new Promise((resolve) => {
@@ -95,14 +95,23 @@ window.onmessage = (ev) => {
 setTimeout(removeLoading, 1000);
 
 const api: XossApi = {
-  selectFitFile: () => {
+  selectFitFile: (): Promise<undefined | string> => {
     return ipcRenderer.invoke("select-fit-file");
   },
   convertFitToJson: (fitPath: string) => {
     return ipcRenderer.send("convert-fit-to-json", fitPath);
   },
-  getWorkouts: async (workoutId: string | null): Promise<string> => {
+  getWorkouts: (workoutId: string | null): Promise<string> => {
     return ipcRenderer.invoke("get-workouts", workoutId);
+  },
+  updateStore: (object: StoreSchema) => {
+    return ipcRenderer.send("update-store", object);
+  },
+  getWholeStore: (): Promise<StoreSchema> => {
+    return ipcRenderer.invoke("get-whole-store");
+  },
+  setSelectedWorkout: (callback: (workoutId: string) => void) => {
+    return ipcRenderer.on("set-selected-workout", (_, workoutId: string) => callback(workoutId));
   }
 };
 

@@ -1,8 +1,11 @@
 import { app, BrowserWindow, shell, ipcMain, dialog } from "electron";
+
 import { release } from "node:os";
 import { join } from "node:path";
 import { getWorkoutsHandler } from "../mongo";
 import { connectDb, fitToJsonConverter } from "../utils";
+import Store, { Schema } from "electron-store";
+import { StoreSchema } from "../../index";
 
 // The built directory structure
 //
@@ -14,6 +17,36 @@ import { connectDb, fitToJsonConverter } from "../utils";
 // ├─┬ dist
 // │ └── index.html    > Electron-Renderer
 //
+
+export const schema: Schema<StoreSchema> = {
+  pathColor: {
+    type: "string",
+    default: "#ff0004"
+  },
+  pathWidth: {
+    type: "number",
+    default: 2
+  },
+  isAntPathEnabled: {
+    type: "boolean",
+    default: true
+  },
+  isStartAndEndPointsEnabled: {
+    type: "boolean",
+    default: true
+  },
+  isDistanceSignsEnabled: {
+    type: "boolean",
+    default: true
+  },
+  distanceSignsVisibleZoomLevel: {
+    type: "number",
+    default: 10
+  }
+};
+
+const store = new Store<StoreSchema>({ schema });
+
 process.env.DIST_ELECTRON = join(__dirname, "../");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
 process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL ? join(process.env.DIST_ELECTRON, "../public") : process.env.DIST;
@@ -89,13 +122,21 @@ async function createWindow() {
   });
 
   ipcMain.on("convert-fit-to-json", async (_, fitPath) => {
-    fitToJsonConverter(fitPath);
+    await fitToJsonConverter(fitPath);
   });
 
   ipcMain.handle("get-workouts", async (_, id: string = null): Promise<string> => {
     const result = await getWorkoutsHandler(id);
 
     return JSON.stringify(result);
+  });
+
+  ipcMain.on("update-store", (_, object: StoreSchema) => {
+    store.set(object);
+  });
+
+  ipcMain.handle("get-whole-store", async () => {
+    return store.store;
   });
 }
 

@@ -5,7 +5,7 @@ import { convertMeterToKm } from "@/utils";
 import { useAppStore } from "@/store";
 
 const WorkoutsCalendar = () => {
-  const { workouts } = useAppStore();
+  const workouts = useAppStore((state) => state.workouts);
 
   const workoutDatesWithTotalDistance = useMemo(() => {
     return workouts.map((workout) => {

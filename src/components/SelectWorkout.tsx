@@ -1,21 +1,22 @@
-import { Radio, Select, Typography } from "antd";
+import { Divider, Radio, Select, Typography } from "antd";
 import { useAppStore } from "@/store";
 import { useMemo, useState } from "react";
 import { convertMeterToKm } from "@/utils";
 import dayjs from "dayjs";
-import { JSONFile } from "../../index";
+import { ConvertedJSONFile } from "../../index";
 
-const SORTERS = ["distance", "date", "duration"];
-type SorterValue = "distance" | "date" | "duration";
+const SORTERS = ["distance", "date", "duration"] as const;
+type SorterValue = (typeof SORTERS)[number];
 
 const SelectWorkout = () => {
-  const { workouts, setSelectedWorkout } = useAppStore();
-  const [selectedSorter, setSelectedSorter] = useState<SorterValue>("distance");
+  const workouts = useAppStore((state) => state.workouts);
+  const setSelectedWorkout = useAppStore((state) => state.setSelectedWorkout);
+  const [selectedSorter, setSelectedSorter] = useState<SorterValue>("date");
 
-  const valuesCalculator = (item: JSONFile["details"]) => {
+  const valuesCalculator = (item: ConvertedJSONFile["details"]) => {
     const distance = convertMeterToKm(item.total_distance);
     const date = dayjs(item.start_time).format("DD-MM-YYYY");
-    const duration = dayjs.duration(item.total_moving_time, "milliseconds").format("HH:mm:ss");
+    const duration = dayjs.duration(item.total_moving_time, "seconds").format("HH:mm:ss");
 
     return { distance, date, duration };
   };
@@ -42,12 +43,9 @@ const SelectWorkout = () => {
       });
   }, [workouts, selectedSorter]);
 
-  // const handleOptionRender = ;
-
   return (
     <div className="select-workout">
-      <Typography className="title-workouts">Workouts</Typography>
-
+      <Divider />
       <div className="sorter">
         <Typography>Sort workouts by</Typography>
 
@@ -72,7 +70,7 @@ const SelectWorkout = () => {
           const { distance, date, duration } = valuesCalculator(item.data.details);
 
           return (
-            <div style={{ width: "60%" }}>
+            <div style={{ width: "100%" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontWeight: "bold" }}>Date:</span> {date}
               </div>

@@ -1,14 +1,18 @@
-import fitDecoder from "fit-decoder";
-import { readFile, writeFile } from "node:fs/promises";
-import { JSONFile, WorkoutRecord } from "../../index";
-import path from "node:path";
 import mongoose from "mongoose";
+import { BrowserWindow, Notification } from "electron";
+import FitParser from "fit-file-parser";
+import { readFile, writeFile } from "node:fs/promises";
+import { ConvertedJSONFile, FitJSONFile } from "../../index";
+import path from "node:path";
 import { exec } from "child_process";
-import { Notification } from "electron";
+import * as fs from "node:fs";
+import * as process from "node:process";
 
 const exportJsonIntoMongoDb = async (fileName: string) => {
+  const file = `${fileName}.json`;
+
   exec(
-    `/opt/homebrew/bin/mongoimport --db bicycle-app --collection workouts --file /Users/bugraotken/Desktop/${fileName}.json`,
+    `/opt/homebrew/bin/mongoimport --db bicycle-app --collection workouts --file ${path.join("temp", file)}`,
     (err) => {
       if (err) {
         new Notification({ title: "Error", body: err.message }).show();
@@ -17,16 +21,23 @@ const exportJsonIntoMongoDb = async (fileName: string) => {
           title: "Success",
           body: "fit file was imported successfully!"
         }).show();
+
+        fs.unlinkSync(path.join("temp", file));
+        BrowserWindow.getAllWindows()[0].reload();
       }
     }
   );
 };
 
-const saveJson = async (json: JSONFile, filePath: string) => {
+const saveJson = async (json: ConvertedJSONFile, filePath: string) => {
   const fileName = path.parse(filePath).name;
 
   try {
-    await writeFile(`/Users/bugraotken/Desktop/${fileName}.json`, JSON.stringify(json), {
+    if (!fs.existsSync("temp")) {
+      fs.mkdirSync("temp", { recursive: true });
+    }
+
+    await writeFile(path.join("temp", `${fileName}.json`), JSON.stringify(json), {
       encoding: "utf8"
     });
     exportJsonIntoMongoDb(fileName);
@@ -40,54 +51,54 @@ const saveJson = async (json: JSONFile, filePath: string) => {
 
 export const fitToJsonConverter = async (filePath: string) => {
   const file = await readFile(filePath);
-  const buffer = file.buffer;
-  const jsonRaw = fitDecoder.fit2json(buffer);
-  const json = fitDecoder.parseRecords(jsonRaw);
 
-  const activity = json.records.find((record) => record.type === "session");
-  const records = json.records.reduce((acc: WorkoutRecord[], record) => {
-    if (record.type === "record") {
-      acc.push({
-        timestamp: record.data.timestamp,
-        position_lat: record.data.position_lat,
-        position_long: record.data.position_long,
-        distance: record.data.distance,
-        altitude: record.data.altitude,
-        speed: record.data.speed,
-        temperature: record.data.temperature
-      });
-    }
+  if (file) {
+    const buffer = file.buffer;
 
-    return acc;
-  }, []);
+    // Create a FitParser instance (options argument is optional)
+    const fitParser = new FitParser({
+      force: true,
+      speedUnit: "km/h",
+      lengthUnit: "m",
+      temperatureUnit: "celsius",
+      pressureUnit: "bar",
+      elapsedRecordField: true,
+      mode: "both"
+    });
 
-  const newJson = {
-    records,
-    details: {
-      timestamp: activity.data.timestamp,
-      start_time: activity.data.start_time,
-      total_elapsed_time: activity.data.total_elapsed_time,
-      total_distance: activity.data.total_distance,
-      total_moving_time: activity.data.total_moving_time,
-      enhanced_avg_speed: activity.data.enhanced_avg_speed,
-      enhanced_max_speed: activity.data.enhanced_max_speed,
-      enhanced_avg_altitude: activity.data.enhanced_avg_altitude,
-      enhanced_min_altitude: activity.data.enhanced_min_altitude,
-      enhanced_max_altitude: activity.data.enhanced_max_altitude,
-      avg_speed: activity.data.avg_speed,
-      max_speed: activity.data.max_speed,
-      total_ascent: activity.data.total_ascent,
-      total_descent: activity.data.total_descent,
-      num_laps: activity.data.num_laps,
-      avg_altitude: activity.data.avg_altitude,
-      max_altitude: activity.data.max_altitude,
-      min_altitude: activity.data.min_altitude,
-      avg_temperature: activity.data.avg_temperature,
-      max_temperature: activity.data.max_temperature
-    }
-  };
+    // Parse your file
+    fitParser.parse(buffer, async (error, data: FitJSONFile) => {
+      // Handle result of parse method
+      if (error) {
+        new Notification({
+          title: "Error",
+          body: error
+        }).show();
+      } else {
+        const newJson = {
+          records: data.records,
+          details: {
+            timestamp: data.sessions[0].timestamp,
+            start_time: data.sessions[0].start_time,
+            total_elapsed_time: data.sessions[0].total_elapsed_time,
+            total_distance: data.sessions[0].total_distance,
+            total_moving_time: data.sessions[0].total_moving_time,
+            avg_speed: data.sessions[0].avg_speed,
+            max_speed: data.sessions[0].max_speed,
+            total_ascent: data.sessions[0].total_ascent,
+            total_descent: data.sessions[0].total_descent,
+            avg_altitude: data.sessions[0].avg_altitude,
+            max_altitude: data.sessions[0].max_altitude,
+            min_altitude: data.sessions[0].min_altitude,
+            avg_temperature: data.sessions[0].avg_temperature,
+            max_temperature: data.sessions[0].max_temperature
+          }
+        };
 
-  await saveJson(newJson, filePath);
+        await saveJson(newJson, filePath);
+      }
+    });
+  }
 };
 
 export const connectDb = async () => {
@@ -107,6 +118,7 @@ export const connectDb = async () => {
           title: "Error",
           body: "MongoDb service couldn't be started!"
         }).show();
+        process.exit(1);
       } else {
         new Notification({
           title: "Success",
